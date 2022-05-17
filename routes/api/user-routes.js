@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { User } = require('../../models');
+const { User, Post, Enjoy } = require('../../models');
 
 router.get('/', (req, res) => {
     User.findAll({
@@ -14,10 +14,18 @@ router.get('/', (req, res) => {
 
 router.get('/:id', (req, res) => {
     User.findOne({
-        attributes: { exclude: ['password'] },
-        where: {
-            id: req.params.id
-        }
+        include: [
+            {
+                model: Post,
+                attributes: ['id', 'title', 'post_url', 'created_at']
+            },
+            {
+                model: Post,
+                attributes: ['title'],
+                through: Enjoy,
+                as: 'enjoyed_posts'
+            }
+        ]
     })
         .then(dbUserData => {
             if (!dbUserData) {

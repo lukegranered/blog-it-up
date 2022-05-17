@@ -1,11 +1,18 @@
 const router = require('express').Router();
+const sequelize = require('../../config/connection');
 const res = require('express/lib/response');
-const { Post, User } = require('../../models');
+const { Post, User, Enjoy } = require('../../models');
 
 router.get('/', (req, res) => {
     console.log('======');
     Post.findAll({
-        attributes: ['id', 'post_url', 'title', 'created_at'],
+        attributes: [
+            'id', 
+            'post_url', 
+            'title', 
+            'created_at',
+            [sequelize.literal('(SELECT COUNT(*) FROM enjoy WHERE post.id = enjoy.post_id)'), 'enjoy_count']
+        ],
         order: [['created_at', 'DESC']],
         include: [
             {
@@ -26,7 +33,13 @@ router.get('/:id', (req, res) => {
         where: {
             id: req.params.id
         },
-        attributes: ['id', 'post_url', 'title', 'created_at'],
+        attributes: [
+            'id', 
+            'post_url', 
+            'title', 
+            'created_at',
+            [sequelize.literal('(SELECT COUNT(*) FROM enjoy WHERE post.id = enjoy.post_id)'), 'enjoy_id']
+        ],
         include: [
             {
                 model: User,
@@ -57,6 +70,15 @@ router.post('/', (req, res) => {
         .catch(err => {
             console.log(err);
             res.status(500).json(err);
+        });
+});
+
+router.put('/enjoy', (req, res) => {
+    Post.enjoy(req.body, { Enjoy })
+        .then(updatedPostData => res.json(updatedPostData))
+        .catch(err => {
+            console.log(err);
+            res.status(400).json(err);
         });
 });
 
