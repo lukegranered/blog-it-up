@@ -82,12 +82,14 @@ router.post('/', (req, res) => {
 });
 
 router.put('/enjoy', (req, res) => {
-    Post.enjoy(req.body, { Enjoy })
-        .then(updatedPostData => res.json(updatedPostData))
-        .catch(err => {
-            console.log(err);
-            res.status(400).json(err);
-        });
+  if (req.session) {
+    Post.enjoy({ ...req.body, user_id: req.session.user_id }, { Enjoy, Comment, User })
+      .then(updatedEnjoyData => res.json(updatedEnjoyData))
+      .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  }
 });
 
 router.put('/:id', (req, res) => {
